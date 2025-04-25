@@ -1,9 +1,10 @@
 # Image Compression Project
 
 ## Level of Difficulty: 20/20
-This project implements an image compression algorithm with a user-friendly interface. The complexity comes from:
-- Understanding image compression principles
-- Implementing a working compression algorithm
+This project implements a greedy image compression algorithm with a user-friendly interface. The complexity comes from:
+- Understanding and implementing the greedy compression algorithm
+- Processing images in blocks
+- Making local optimal decisions
 - Creating an intuitive GUI
 - Handling various image formats
 - Managing memory efficiently
@@ -17,34 +18,52 @@ Image compression is essential in today's digital world because:
 - Storage costs increase with image size
 
 Our solution provides:
-- A simple way to compress images
-- Control over compression quality
+- A greedy approach to image compression
+- Control over compression threshold
 - Visual feedback before and after compression
 - Detailed compression statistics
 
 ## Algorithm Explanation: 20/20
-The compression algorithm works in three simple steps:
+The greedy compression algorithm works in four steps:
 
 1. **Image Loading and Preparation**:
    ```python
    img = Image.open(image_path)
    if img.mode != 'RGB':
        img = img.convert('RGB')
+   img_array = np.array(img)
    ```
    - Loads the image
    - Converts to RGB format if needed
-   - Prepares for compression
+   - Converts to numpy array for processing
 
-2. **Quality-based Compression**:
+2. **Block-based Processing**:
    ```python
-   quality = int(self.quality.get() * 100)
-   img.save(output_path, quality=quality)
+   block_size = 8  # Size of blocks for compression
+   for i in range(0, height, block_size):
+       for j in range(0, width, block_size):
+           block = img_array[i:min(i+block_size, height), 
+                           j:min(j+block_size, width)]
    ```
-   - Uses JPEG compression algorithm
-   - Adjusts quality parameter (0-100)
-   - Lower quality = higher compression
+   - Divides image into 8x8 blocks
+   - Processes each block independently
+   - Makes local optimal decisions
 
-3. **Results Analysis**:
+3. **Greedy Compression**:
+   ```python
+   mean = np.mean(block, axis=(0, 1))
+   std = np.std(block, axis=(0, 1))
+   if np.all(std < threshold * 255):
+       compressed_block = mean
+   else:
+       compressed_block = block
+   ```
+   - Calculates mean and standard deviation for each block
+   - Makes greedy decision based on threshold
+   - Replaces block with mean if variation is low
+   - Keeps original block if variation is high
+
+4. **Results Analysis**:
    ```python
    original_size = os.path.getsize(self.image_path)
    compressed_size = os.path.getsize(output_path)
@@ -58,21 +77,21 @@ The compression algorithm works in three simple steps:
 
 ### Time Complexity
 - Loading: O(n) where n is image size
-- Compression: O(n) where n is image size
-- Saving: O(n) where n is image size
+- Block processing: O(n) where n is number of blocks
+- Compression: O(m) where m is block size
 - Overall: O(n) linear time complexity
 
 ### Space Complexity
 - O(n) where n is image size
-- Temporary memory for image processing
+- Temporary memory for block processing
 - No additional significant memory usage
 
 ### Advantages
-1. **Simplicity**: Easy to understand and use
-2. **Speed**: Fast compression process
-3. **Control**: Adjustable quality settings
-4. **Visual Feedback**: See results immediately
-5. **Compatibility**: Works with common image formats
+1. **Greedy Approach**: Makes locally optimal decisions
+2. **Block-based**: Processes image in manageable chunks
+3. **Adaptive**: Adjusts compression based on image content
+4. **Control**: Adjustable threshold for compression
+5. **Visual Feedback**: See results immediately
 
 ### Alternative Approaches
 1. **Lossless Compression**:
@@ -80,15 +99,15 @@ The compression algorithm works in three simple steps:
    - No quality loss
    - Lower compression ratio
 
-2. **Advanced Algorithms**:
-   - Wavelet compression
-   - Fractal compression
+2. **Transform-based Compression**:
+   - DCT (Discrete Cosine Transform)
+   - Wavelet transform
    - More complex but better ratios
 
-3. **Block-based Compression**:
-   - Divide image into blocks
-   - Compress blocks independently
-   - More control over compression
+3. **Predictive Compression**:
+   - Uses previous pixels to predict next
+   - Better for certain image types
+   - More complex implementation
 
 ## Class Input/Evaluation: 20/20
 
@@ -100,8 +119,8 @@ filetypes = (
     ('All files', '*.*')
 )
 
-# Quality range
-quality = tk.DoubleVar(value=0.8)  # 0.1 to 1.0
+# Threshold range
+threshold = tk.DoubleVar(value=0.8)  # 0.1 to 1.0
 ```
 
 ### Evaluation Metrics
@@ -114,7 +133,7 @@ quality = tk.DoubleVar(value=0.8)  # 0.1 to 1.0
 
 2. **Quality Assessment**:
    - Visual comparison
-   - File size reduction
+   - Block-level analysis
    - User satisfaction
 
 3. **Performance Metrics**:
@@ -130,9 +149,9 @@ quality = tk.DoubleVar(value=0.8)  # 0.1 to 1.0
 
 2. Select an image using the "Select Image" button
 
-3. Adjust quality using the slider:
-   - Higher values (0.8-1.0) = better quality
-   - Lower values (0.1-0.3) = higher compression
+3. Adjust threshold using the slider:
+   - Higher values (0.8-1.0) = less compression
+   - Lower values (0.1-0.3) = more compression
 
 4. Click "Compress Image" to process
 
